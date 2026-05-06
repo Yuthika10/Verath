@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from app.services.llm import ask_llm
 from app.core.exceptions import LLMError
 
-logger = logging.getLogger("SecondBrain")
+logger = logging.getLogger("Verath")
 
 
 class MemoryExtractor:

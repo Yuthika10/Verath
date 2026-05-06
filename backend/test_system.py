@@ -1,5 +1,5 @@
 """
-SecondBrain System Test Script
+Verath System Test Script
 Tests all major endpoints and functionality
 """
 import asyncio
@@ -174,7 +174,7 @@ def test_summary(token):
 def main():
     """Run all tests"""
     print("\n" + "="*60)
-    print("SecondBrain System Test Suite")
+    print("Verath System Test Suite")
     print("="*60)
     
     # Test 1: Status

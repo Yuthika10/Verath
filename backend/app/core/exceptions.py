@@ -2,46 +2,46 @@ from typing import Optional, Any
 from fastapi import HTTPException, status
 
 
-class SecondBrainException(Exception):
-    """Base exception for SecondBrain application."""
+class VerathException(Exception):
+    """Base exception for Verath application."""
     def __init__(self, message: str, details: Optional[dict] = None):
         self.message = message
         self.details = details or {}
         super().__init__(self.message)
 
 
-class TranscriptionError(SecondBrainException):
+class TranscriptionError(VerathException):
     """Raised when audio transcription fails."""
     pass
 
 
-class EmbeddingError(SecondBrainException):
+class EmbeddingError(VerathException):
     """Raised when embedding generation fails."""
     pass
 
 
-class LLMError(SecondBrainException):
+class LLMError(VerathException):
     """Raised when LLM inference fails."""
     pass
 
 
-class MemoryStorageError(SecondBrainException):
+class MemoryStorageError(VerathException):
     """Raised when memory storage operations fail."""
     pass
 
 
-class QueryError(SecondBrainException):
+class QueryError(VerathException):
     """Raised when query operations fail."""
     pass
 
 
-class AuthenticationError(SecondBrainException):
+class AuthenticationError(VerathException):
     """Raised when authentication fails."""
     pass
 
 
-def http_exception_from_error(error: SecondBrainException) -> HTTPException:
-    """Convert SecondBrainException to HTTPException."""
+def http_exception_from_error(error: VerathException) -> HTTPException:
+    """Convert VerathException to HTTPException."""
     status_code_map = {
         TranscriptionError: status.HTTP_422_UNPROCESSABLE_ENTITY,
         EmbeddingError: status.HTTP_422_UNPROCESSABLE_ENTITY,

@@ -27,7 +27,7 @@ def setup_logging(log_dir: str = "logs"):
     root_logger.addHandler(console_handler)
     
     # File handler with rotation
-    log_file = log_path / f"secondbrain_{datetime.now().strftime('%Y%m%d')}.log"
+    log_file = log_path / f"Verath_{datetime.now().strftime('%Y%m%d')}.log"
     file_handler = RotatingFileHandler(
         log_file,
         maxBytes=10 * 1024 * 1024,  # 10MB
@@ -41,4 +41,4 @@ def setup_logging(log_dir: str = "logs"):
     
     return root_logger
 
-logger = logging.getLogger("SecondBrain")
+logger = logging.getLogger("Verath")

@@ -73,7 +73,7 @@ export default function LoginScreen({ onLoginSuccess, onSwitchToRegister }) {
             <MaterialCommunityIcons name="brain" size={60} color="#fff" />
           </LinearGradient>
         </View>
-        <Text style={styles.title}>SecondBrain</Text>
+        <Text style={styles.title}>Verath</Text>
         <Text style={styles.subtitle}>Initialize your neural connection</Text>
       </View>
 

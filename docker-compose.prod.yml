@@ -6,14 +6,14 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: secondbrain-backend
+    container_name: Verath-backend
     restart: always
     ports:
       - "8002:8002"
     environment:
       - ENV=production
       - MONGO_URI=${MONGO_URI}
-      - DATABASE_NAME=${DATABASE_NAME:-secondbrain_prod}
+      - DATABASE_NAME=${DATABASE_NAME:-Verath_prod}
       - SECRET_KEY_FILE=/run/secrets/secret_key
     volumes:
       - chromadb_data:/app/data/chromadb
@@ -23,7 +23,7 @@ services:
     depends_on:
       - mongodb
     networks:
-      - secondbrain-network
+      - Verath-network
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8002/status')"]
       interval: 30s
@@ -42,12 +42,12 @@ services:
   # MongoDB (internal only, no exposed ports)
   mongodb:
     image: mongo:7
-    container_name: secondbrain-mongodb
+    container_name: Verath-mongodb
     restart: always
     environment:
       - MONGO_INITDB_ROOT_USERNAME_FILE=/run/secrets/mongo_username
       - MONGO_INITDB_ROOT_PASSWORD_FILE=/run/secrets/mongo_password
-      - MONGO_INITDB_DATABASE=${DATABASE_NAME:-secondbrain_prod}
+      - MONGO_INITDB_DATABASE=${DATABASE_NAME:-Verath_prod}
     volumes:
       - mongodb_data:/data/db
       - mongodb_config:/data/configdb
@@ -55,7 +55,7 @@ services:
       - mongo_username
       - mongo_password
     networks:
-      - secondbrain-network
+      - Verath-network
     deploy:
       resources:
         limits:
@@ -65,7 +65,7 @@ services:
   # Ollama (optional - GPU passthrough requires host configuration)
   ollama:
     image: ollama/ollama:latest
-    container_name: secondbrain-ollama
+    container_name: Verath-ollama
     restart: always
     # Uncomment for GPU support:
     # deploy:
@@ -78,7 +78,7 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     networks:
-      - secondbrain-network
+      - Verath-network
     deploy:
       resources:
         limits:
@@ -88,7 +88,7 @@ services:
   # Nginx reverse proxy with SSL
   nginx:
     image: nginx:alpine
-    container_name: secondbrain-nginx
+    container_name: Verath-nginx
     restart: always
     ports:
       - "80:80"
@@ -99,7 +99,7 @@ services:
     depends_on:
       - backend
     networks:
-      - secondbrain-network
+      - Verath-network
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
       interval: 30s
@@ -107,7 +107,7 @@ services:
       retries: 3
 
 networks:
-  secondbrain-network:
+  Verath-network:
     driver: bridge
 
 volumes:

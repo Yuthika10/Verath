@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Always-on listener for SecondBrain.
+Always-on listener for Verath.
 Records audio chunks and processes them when speech is detected.
 """
 
@@ -15,7 +15,7 @@ from app.services.pipeline import process_audio
 
 def main():
     """Start the always-on listener."""
-    print("🎤 Starting SecondBrain Always-on Listener")
+    print("🎤 Starting Verath Always-on Listener")
     print("=" * 50)
     print("This will continuously listen for speech and process it.")
     print("Press Ctrl+C to stop.")

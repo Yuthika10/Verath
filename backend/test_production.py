@@ -1,5 +1,5 @@
 """
-Production-grade test suite for SecondBrain backend
+Production-grade test suite for Verath backend
 Tests ChromaDB migration, retry logic, and JWT refresh tokens
 """
 import asyncio
@@ -203,7 +203,7 @@ def test_queue_stats():
 def main():
     """Run all production tests."""
     print("\n" + "="*60)
-    print("SecondBrain Production Test Suite")
+    print("Verath Production Test Suite")
     print("="*60)
     
     results = []

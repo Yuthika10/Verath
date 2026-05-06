@@ -13,7 +13,7 @@
 
 ## 📖 Overview
 
-# SecondBrain
+# Verath
 
 **AI-Powered Personal Memory System**
 
@@ -22,8 +22,8 @@ Verath is your intelligent companion that records, summarizes, and indexes your 
 ## Quick Start (60 seconds)
 
 ```bash
-git clone https://github.com/yourusername/secondbrain.git
-cd secondbrain
+git clone https://github.com/yourusername/Verath.git
+cd Verath
 cp .env.example .env  # Edit MONGO_URI and SECRET_KEY
 docker-compose up -d
 open http://localhost:8080
@@ -196,7 +196,7 @@ Answer + Sources + Confidence
 ## 📁 File Structure
 
 ```
-secondbrain/
+Verath/
 ├── backend/                          # FastAPI Backend (Python)
 │   ├── app/
 │   │   ├── core/                     # Core utilities
@@ -914,8 +914,8 @@ Navigate to `http://localhost:8080`
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/secondbrain.git
-cd secondbrain
+git clone https://github.com/yourusername/Verath.git
+cd Verath
 ```
 
 #### 2. Backend Setup
@@ -975,7 +975,7 @@ VOICE_DB_PATH=data/voices.pkl
 
 # MongoDB Configuration (REQUIRED)
 MONGO_URI=mongodb+srv://your-username:your-password@cluster0.example.mongodb.net/
-DATABASE_NAME=secondbrain
+DATABASE_NAME=Verath
 
 # Security (REQUIRED)
 SECRET_KEY=generate-a-long-random-secret-key-min-32-characters
@@ -1077,7 +1077,7 @@ The dashboard will be available at `http://localhost:8080`
 | `VECTOR_DB_PATH` | ChromaDB path | `data/chroma_db` | No |
 | `VOICE_DB_PATH` | Voice profiles path | `data/voices.pkl` | No |
 | `MONGO_URI` | MongoDB connection string | - | Yes |
-| `DATABASE_NAME` | MongoDB database name | `secondbrain` | No |
+| `DATABASE_NAME` | MongoDB database name | `Verath` | No |
 | `SECRET_KEY` | JWT secret key (min 32 chars) | - | Yes |
 
 ### Ollama Configuration
@@ -1186,10 +1186,10 @@ This will start:
 
 ```bash
 # Build the image
-docker build -t secondbrain:v3.0 .
+docker build -t Verath:v3.0 .
 
 # Run the container
-docker run -p 8000:8000 --env-file .env secondbrain:v3.0
+docker run -p 8000:8000 --env-file .env Verath:v3.0
 ```
 
 ---
@@ -1209,8 +1209,8 @@ sudo apt install python3.11 python3-pip mongodb
 
 3. **Clone repository**:
 ```bash
-git clone https://github.com/yourusername/secondbrain.git
-cd secondbrain
+git clone https://github.com/yourusername/Verath.git
+cd Verath
 ```
 
 4. **Configure environment**:
@@ -1227,16 +1227,16 @@ pip3 install -r requirements.txt
 
 6. **Set up systemd service**:
 ```ini
-# /etc/systemd/system/secondbrain.service
+# /etc/systemd/system/Verath.service
 [Unit]
-Description=SecondBrain API
+Description=Verath API
 After=network.target
 
 [Service]
 Type=simple
 User=youruser
-WorkingDirectory=/path/to/secondbrain/backend
-ExecStart=/usr/bin/python3 /path/to/secondbrain/backend/run.py
+WorkingDirectory=/path/to/Verath/backend
+ExecStart=/usr/bin/python3 /path/to/Verath/backend/run.py
 Restart=always
 
 [Install]
@@ -1245,8 +1245,8 @@ WantedBy=multi-user.target
 
 7. **Start service**:
 ```bash
-sudo systemctl enable secondbrain
-sudo systemctl start secondbrain
+sudo systemctl enable Verath
+sudo systemctl start Verath
 ```
 
 8. **Set up reverse proxy** (Nginx):
@@ -1398,7 +1398,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ```bash
 # Clone your fork
-git clone https://github.com/yourusername/secondbrain.git
+git clone https://github.com/yourusername/Verath.git
 
 # Create virtual environment
 python -m venv venv
@@ -1443,8 +1443,8 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 For issues, questions, or contributions:
 
-- **GitHub Issues**: [Create an issue](https://github.com/yourusername/secondbrain/issues)
-- **Discussions**: [Join the discussion](https://github.com/yourusername/secondbrain/discussions)
+- **GitHub Issues**: [Create an issue](https://github.com/yourusername/Verath/issues)
+- **Discussions**: [Join the discussion](https://github.com/yourusername/Verath/discussions)
 - Check the troubleshooting section above
 - Review additional documentation:
   - [SETUP.md](SETUP.md) - Detailed setup guide

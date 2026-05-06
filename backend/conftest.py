@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import os
 os.environ.setdefault("MONGO_URI", "mongodb://localhost:27017")
 os.environ.setdefault("SECRET_KEY", "test-secret-key-that-is-long-enough-for-validation")
-os.environ.setdefault("DATABASE_NAME", "secondbrain_test")
+os.environ.setdefault("DATABASE_NAME", "Verath_test")
 
 
 from app.main import app

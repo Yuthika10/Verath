@@ -140,7 +140,7 @@ async def export_memories(
                 iter([output.getvalue()]),
                 media_type="text/csv",
                 headers={
-                    "Content-Disposition": f"attachment; filename=secondbrain_export_{user_id}.csv"
+                    "Content-Disposition": f"attachment; filename=Verath_export_{user_id}.csv"
                 }
             )
         else:

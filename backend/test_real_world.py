@@ -1,5 +1,5 @@
 """
-Real-world test scenarios for SecondBrain
+Real-world test scenarios for Verath
 Tests correction detection, temporal parsing, and full pipeline
 """
 import asyncio
@@ -173,7 +173,7 @@ def test_full_pipeline_integration():
 def main():
     """Run all test scenarios"""
     print("\n" + "="*60)
-    print("SecondBrain Real-World Test Suite")
+    print("Verath Real-World Test Suite")
     print("="*60)
     
     try:

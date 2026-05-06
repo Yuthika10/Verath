@@ -1,5 +1,5 @@
 """
-End-to-End Integration Test for SecondBrain
+End-to-End Integration Test for Verath
 
 Tests the complete user flow from signup to logout against a running backend instance.
 Run with: python -m pytest tests/test_e2e.py -v
@@ -18,7 +18,7 @@ TEST_TEXT = "Meeting with Sarah next Monday at 2pm about the product launch dead
 
 
 class TestE2E:
-    """End-to-end integration tests for SecondBrain backend."""
+    """End-to-end integration tests for Verath backend."""
 
     @pytest.fixture(scope="class")
     async def http_client(self):

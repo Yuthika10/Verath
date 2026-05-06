@@ -1,5 +1,5 @@
 """
-Comprehensive system validation script for SecondBrain.
+Comprehensive system validation script for Verath.
 Tests all components with real-world edge cases and concurrent scenarios.
 """
 import sys
@@ -266,7 +266,7 @@ class SystemValidator:
 def main():
     """Run all validation tests"""
     print("="*80)
-    print("SecondBrain System Validation")
+    print("Verath System Validation")
     print("="*80)
     print(f"Base URL: {BASE_URL}")
     print(f"Started at: {datetime.now()}")
