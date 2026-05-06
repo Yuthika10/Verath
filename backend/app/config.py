@@ -19,8 +19,12 @@ class Settings(BaseSettings):
         description="MongoDB connection string"
     )
     database_name: str = Field(
-        default="secondbrain",
+        default="verath",
         description="Database name"
+    )
+    app_name: str = Field(
+        default="Verath",
+        description="Application name"
     )
 
     # ── Security ───────────────────────────────────────────────────────────────────
@@ -42,7 +46,15 @@ class Settings(BaseSettings):
             raise ValueError("SECRET_KEY is set to a known insecure default — please change it.")
         return v
 
-    # ── Ollama ────────────────────────────────────────────────────────────────
+    # ── LLM Providers (Groq + Gemini Fallback) ──────────────────────────────────
+    groq_api_key: str = Field(default="", description="Groq API Key")
+    gemini_api_key: str = Field(default="", description="Google Gemini API Key")
+    llm_provider: str = Field(default="groq", description="Primary LLM provider: groq or gemini")
+    groq_model: str = Field(default="llama-3.1-8b-instant", description="Groq model to use")
+    gemini_model: str = Field(default="gemini-1.5-flash", description="Gemini model to use")
+    llm_timeout: int = Field(default=30, description="LLM request timeout in seconds")
+    
+    # ── Legacy Ollama (kept for compatibility) ──────────────────────────────────
     ollama_url: str = os.getenv("OLLAMA_URL", "http://localhost:11434")
     model_name: str = "mistral"
     embed_model: str = "nomic-embed-text"

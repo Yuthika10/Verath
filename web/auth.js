@@ -1,98 +1,124 @@
 /**
- * SecondBrain Auth Logic
+ * Verath Auth Logic
  * Connects to FastAPI backend
  */
 
-const API_BASE = "http://localhost:8002"; // Adjust if your backend runs on a different port
+const API_BASE = "http://localhost:8000";
 
-document.addEventListener('DOMContentLoaded', () => {
-    const loginView = document.getElementById('login-view');
-    const signupView = document.getElementById('signup-view');
-    const showSignup = document.getElementById('show-signup');
-    const showLogin = document.getElementById('show-login');
+// Tab switching
+function showLogin() {
+    document.getElementById('tab-login').classList.add('active');
+    document.getElementById('tab-register').classList.remove('active');
+    document.getElementById('login-form').classList.remove('hidden');
+    document.getElementById('register-form').classList.add('hidden');
+}
 
-    const loginForm = document.getElementById('login-form');
-    const signupForm = document.getElementById('signup-form');
+function showRegister() {
+    document.getElementById('tab-login').classList.remove('active');
+    document.getElementById('tab-register').classList.add('active');
+    document.getElementById('login-form').classList.add('hidden');
+    document.getElementById('register-form').classList.remove('hidden');
+}
 
-    // Toggle between Login and Signup
-    showSignup.addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.style.display = 'none';
-        signupView.style.display = 'block';
-    });
+// Handle Login
+async function handleLogin(e) {
+    e.preventDefault();
+    const form = e.target;
+    const username = form.username.value;
+    const password = form.password.value;
+    const btn = document.getElementById('login-btn');
+    const errorEl = document.getElementById('login-error');
 
-    showLogin.addEventListener('click', (e) => {
-        e.preventDefault();
-        signupView.style.display = 'none';
-        loginView.style.display = 'block';
-    });
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Signing in...';
+    errorEl.textContent = '';
 
-    // Handle Login
-    loginForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const btn = document.getElementById('login-btn');
+    try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({ username, password })
+        });
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Authenticating...';
+        const data = await response.json();
 
-        try {
-            const response = await fetch(`${API_BASE}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                localStorage.setItem('sb_token', data.access_token);
-                localStorage.setItem('sb_username', username);
-                window.location.href = 'index.html';
-            } else {
-                alert(data.detail || 'Access Denied');
-            }
-        } catch (error) {
-            console.error('Login error:', error);
-            alert('Could not connect to the neural core. Please check if the backend is running.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'Initialize Session';
+        if (response.ok) {
+            localStorage.setItem('verath_token', data.access_token);
+            localStorage.setItem('verath_username', username);
+            window.location.href = 'index.html';
+        } else {
+            errorEl.textContent = data.detail || 'Invalid credentials';
         }
-    });
+    } catch (error) {
+        console.error('Login error:', error);
+        errorEl.textContent = 'Could not connect to server. Please check if the backend is running.';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Sign in <i class="fa-solid fa-arrow-right"></i>';
+    }
+}
 
-    // Handle Signup
-    signupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const username = document.getElementById('reg-username').value;
-        const password = document.getElementById('reg-password').value;
-        const btn = document.getElementById('signup-btn');
+// Handle Register
+async function handleRegister(e) {
+    e.preventDefault();
+    const form = e.target;
+    const username = form.username.value;
+    const password = form.password.value;
+    const btn = document.getElementById('register-btn');
+    const errorEl = document.getElementById('register-error');
 
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deploying...';
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Creating account...';
+    errorEl.textContent = '';
 
-        try {
-            const response = await fetch(`${API_BASE}/auth/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
+    try {
+        const response = await fetch(`${API_BASE}/auth/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
 
-            const data = await response.json();
+        const data = await response.json();
 
-            if (response.ok) {
-                alert('Instance deployed successfully! Please log in.');
-                showLogin.click();
-            } else {
-                alert(data.detail || 'Deployment failed');
-            }
-        } catch (error) {
-            console.error('Signup error:', error);
-            alert('Could not connect to the neural core.');
-        } finally {
-            btn.disabled = false;
-            btn.innerHTML = 'Deploy Instance';
+        if (response.ok) {
+            errorEl.style.color = 'var(--accent-secondary)';
+            errorEl.textContent = 'Account created! Redirecting...';
+            localStorage.setItem('verath_token', data.access_token);
+            localStorage.setItem('verath_username', username);
+            setTimeout(() => window.location.href = 'index.html', 500);
+        } else {
+            errorEl.style.color = 'var(--danger)';
+            errorEl.textContent = data.detail || 'Registration failed';
         }
-    });
+    } catch (error) {
+        console.error('Register error:', error);
+        errorEl.style.color = 'var(--danger)';
+        errorEl.textContent = 'Could not connect to server.';
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = 'Create account <i class="fa-solid fa-arrow-right"></i>';
+    }
+}
+
+// Check system status on load
+document.addEventListener('DOMContentLoaded', async () => {
+    try {
+        const res = await fetch(`${API_BASE}/status`);
+        const data = await res.json();
+        const statText = document.querySelector('.stat-pill span:last-child');
+        const statDot = document.querySelector('.stat-dot');
+        
+        if (data.overall === 'healthy') {
+            statText.textContent = 'System Online';
+            statDot.style.background = 'var(--accent-secondary)';
+        } else {
+            statText.textContent = 'System Degraded';
+            statDot.style.background = 'var(--accent-warm)';
+        }
+    } catch (error) {
+        const statText = document.querySelector('.stat-pill span:last-child');
+        const statDot = document.querySelector('.stat-dot');
+        statText.textContent = 'System Offline';
+        statDot.style.background = 'var(--danger)';
+    }
 });

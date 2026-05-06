@@ -1,93 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Authenticate | SecondBrain</title>
-    <link rel="stylesheet" href="auth.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verath | Sign In</title>
+  <meta name="description" content="Sign in to Verath - Your AI memory companion">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="auth.css">
 </head>
-<body class="auth-page">
-    <div class="neural-bg">
-        <div class="blob blob-1"></div>
-        <div class="blob blob-2"></div>
-    </div>
-
-    <div class="auth-container">
-        <div class="auth-card" id="auth-card">
-            <!-- Login Form -->
-            <div id="login-view">
-                <div class="auth-header">
-                    <div class="auth-logo">
-                        <i class="fas fa-brain"></i>
-                    </div>
-                    <h1>Welcome Back</h1>
-                    <p>Access your personal neural network</p>
-                </div>
-
-                <form id="login-form">
-                    <div class="form-group">
-                        <label>Username</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="username" class="auth-input" placeholder="e.g. aris_ai" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="password" class="auth-input" placeholder="••••••••" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="auth-btn" id="login-btn">
-                        <span>Initialize Session</span>
-                    </button>
-                </form>
-
-                <div class="auth-footer">
-                    Don't have a SecondBrain? <a href="#" id="show-signup">Create one</a>
-                </div>
-            </div>
-
-            <!-- Signup Form (Hidden by default) -->
-            <div id="signup-view" style="display: none;">
-                <div class="auth-header">
-                    <div class="auth-logo">
-                        <i class="fas fa-plus-circle"></i>
-                    </div>
-                    <h1>Create Instance</h1>
-                    <p>Start your journey to digital immortality</p>
-                </div>
-
-                <form id="signup-form">
-                    <div class="form-group">
-                        <label>Choose Username</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user-plus"></i>
-                            <input type="text" id="reg-username" class="auth-input" placeholder="Username" required>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Secure Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-key"></i>
-                            <input type="password" id="reg-password" class="auth-input" placeholder="Password" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="auth-btn" id="signup-btn">
-                        <span>Deploy Instance</span>
-                    </button>
-                </form>
-
-                <div class="auth-footer">
-                    Already have an instance? <a href="#" id="show-login">Sign in</a>
-                </div>
-            </div>
+<body>
+  <div class="auth-layout">
+    <!-- Left brand panel -->
+    <div class="auth-brand">
+      <div class="brand-content">
+        <div class="brand-logo">
+          <div class="logo-mark-lg">V</div>
+          <span class="brand-name">Verath</span>
         </div>
+        <h1 class="brand-headline">Your memories,<br>always within reach.</h1>
+        <p class="brand-sub">The AI-powered memory layer that records, indexes, and retrieves everything you've said, heard, and thought.</p>
+        <div class="brand-stats" id="brand-stats">
+          <div class="stat-pill">
+            <span class="stat-dot"></span>
+            <span>System Online</span>
+          </div>
+        </div>
+      </div>
+      <!-- Animated background grid -->
+      <div class="brand-grid" aria-hidden="true"></div>
     </div>
 
-    <script src="auth.js"></script>
+    <!-- Right form panel -->
+    <div class="auth-form-panel">
+      <div class="auth-form-container">
+        <!-- Toggle -->
+        <div class="auth-tabs">
+          <button class="auth-tab active" id="tab-login" onclick="showLogin()">Sign in</button>
+          <button class="auth-tab" id="tab-register" onclick="showRegister()">Create account</button>
+        </div>
+
+        <!-- Login form -->
+        <form id="login-form" class="auth-form" onsubmit="handleLogin(event)">
+          <div class="form-group">
+            <label class="form-label">Username</label>
+            <input type="text" class="input" name="username" placeholder="your_username" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="input" name="password" placeholder="••••••••" required autocomplete="current-password">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="login-btn">
+            Sign in <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <p class="auth-error" id="login-error"></p>
+        </form>
+
+        <!-- Register form -->
+        <form id="register-form" class="auth-form hidden" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label class="form-label">Choose a username</label>
+            <input type="text" class="input" name="username" placeholder="your_username" required autocomplete="username">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <input type="password" class="input" name="password" placeholder="Min. 8 characters" required autocomplete="new-password" minlength="8">
+          </div>
+          <button type="submit" class="btn btn-primary btn-full" id="register-btn">
+            Create account <i class="fa-solid fa-arrow-right"></i>
+          </button>
+          <p class="auth-error" id="register-error"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
-  "name": "secondbrain-mobile",
+  "name": "verath-mobile",
   "version": "0.0.1",
   "private": true,
   "main": "index.js",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/space-grotesk": "^0.4.2",
     "@expo/vector-icons": "^13.0.0",
     "@react-native-async-storage/async-storage": "1.18.2",
     "@react-navigation/bottom-tabs": "^6.5.8",
@@ -20,8 +21,10 @@
     "expo-av": "~13.4.1",
     "expo-blur": "~12.4.1",
     "expo-file-system": "~15.4.5",
+    "expo-font": "~11.4.0",
     "expo-keep-awake": "~12.3.0",
     "expo-linear-gradient": "~12.3.0",
+    "expo-splash-screen": "~0.20.5",
     "react": "^18.2.0",
     "react-native": "0.72.10"
   },

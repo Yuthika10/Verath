@@ -120,7 +120,7 @@ async def warm_chroma_collections():
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("SecondBrain starting up...")
+    logger.info("Verath starting up...")
 
     # 1. Connect to MongoDB and create indexes
     from app.services.database import connect_to_mongo, close_mongo_connection
@@ -146,15 +146,17 @@ async def lifespan(app: FastAPI):
     # Shutdown
     _scheduler.shutdown(wait=False)
     await close_mongo_connection()
-    logger.info("SecondBrain shut down cleanly")
+    logger.info("Verath shut down cleanly")
 
 
 # ── App ───────────────────────────────────────────────────────────────────────
 app = FastAPI(
-    title="SecondBrain API",
+    title="Verath API",
     version="3.0.0",
-    description="AI-powered personal memory system",
+    description="AI-powered personal memory system — voice to structured, searchable knowledge.",
     lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 app.state.limiter = limiter
@@ -243,4 +245,4 @@ async def status():
 
 @app.get("/")
 async def root():
-    return {"message": "SecondBrain API v3.0.0"}
+    return {"message": "Verath API v3.0.0"}

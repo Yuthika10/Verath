@@ -33,7 +33,7 @@ const api = axios.create({
 // Request interceptor - inject Bearer token
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem("sb_token");
+    const token = await AsyncStorage.getItem("verath_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -81,10 +81,9 @@ api.interceptors.response.use(
         const { access_token, refresh_token: new_refresh_token } = response.data;
 
         // Store new tokens
-        await AsyncStorage.setItem("sb_token", access_token);
-        await AsyncStorage.setItem("sb_refresh_token", new_refresh_token);
-
-        // Notify all waiting requests
+        await AsyncStorage.setItem("verath_token", access_token);
+        await AsyncStorage.setItem("verath_refresh_token", new_refresh_token);
+        await AsyncStorage.removeItem("verath_username");
         onRefreshed(access_token);
 
         // Retry original request with new token
@@ -92,9 +91,9 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         // Refresh failed - clear tokens and redirect to login
-        await AsyncStorage.removeItem("sb_token");
-        await AsyncStorage.removeItem("sb_refresh_token");
-        await AsyncStorage.removeItem("sb_username");
+        await AsyncStorage.removeItem("verath_token");
+        await AsyncStorage.removeItem("verath_refresh_token");
+        await AsyncStorage.removeItem("verath_username");
         
         // Note: Navigation would need to be handled by the React Native navigation system
         // This is a placeholder - actual implementation would use navigation.navigate('Login')
@@ -111,7 +110,7 @@ api.interceptors.response.use(
 );
 
 const getAuthHeader = async () => {
-  const token = await AsyncStorage.getItem("sb_token");
+  const token = await AsyncStorage.getItem("verath_token");
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
@@ -165,13 +164,13 @@ export const askQuestion = async (q, options = {}) => {
     
     if (!response.ok) {
       console.warn(`Query failed: ${response.status}`);
-      return { answer: 'Neural core responded with error.', context: [], sources: [] };
+      return { answer: 'Verath encountered an error.', context: [], sources: [] };
     }
     
     return await response.json();
   } catch (error) {
     console.error('Error asking question:', error);
-    return { answer: 'Sorry, I could not connect to your SecondBrain.', context: [], sources: [] };
+    return { answer: 'Sorry, I could not connect to Verath.', context: [], sources: [] };
   }
 };
 
@@ -350,8 +349,8 @@ export const login = async (username, password) => {
     }
     
     const data = await response.json();
-    await AsyncStorage.setItem('sb_token', data.access_token);
-    await AsyncStorage.setItem('sb_username', data.username);
+    await AsyncStorage.setItem('verath_token', data.access_token);
+    await AsyncStorage.setItem('verath_username', data.username);
     return data;
   } catch (error) {
     console.error('Error logging in:', error);
@@ -381,11 +380,26 @@ export const signup = async (username, password) => {
 
 export const logout = async () => {
   try {
-    await AsyncStorage.removeItem('sb_token');
-    await AsyncStorage.removeItem('sb_username');
+    await AsyncStorage.removeItem('verath_token');
+    await AsyncStorage.removeItem('verath_username');
     return true;
   } catch (error) {
     console.error('Error logging out:', error);
     return false;
+  }
+};
+
+export const getRemindersUpcoming = async () => {
+  try {
+    const authHeader = await getAuthHeader();
+    const response = await fetch(`${BASE_URL}/reminders/upcoming`, {
+      headers: { ...authHeader }
+    });
+    
+    if (!response.ok) return { reminders: [] };
+    return await response.json();
+  } catch (error) {
+    console.warn('Reminders fetch failed:', error.message);
+    return { reminders: [] };
   }
 };

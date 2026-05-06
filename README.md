@@ -1,4 +1,4 @@
-# 🧠 SecondBrain
+# 🧠 Verath
 
 ## AI-Powered Personal Memory System v3.0
 
@@ -17,7 +17,7 @@
 
 **AI-Powered Personal Memory System**
 
-SecondBrain is your intelligent companion that records, summarizes, and indexes your conversations, meetings, and thoughts. It automatically extracts key entities, dates, and insights, making your personal knowledge searchable and actionable.
+Verath is your intelligent companion that records, summarizes, and indexes your conversations, meetings, and thoughts. It automatically extracts key entities, dates, and insights, making your personal knowledge searchable and actionable.
 
 ## Quick Start (60 seconds)
 
@@ -29,7 +29,7 @@ docker-compose up -d
 open http://localhost:8080
 ```
 
-SecondBrain is an AI-powered personal memory system that transforms raw audio and text into structured, searchable memories that you can query naturally—like asking your own brain for information. It combines advanced speech recognition, intelligent NLP extraction, vector embeddings, and retrieval-augmented generation (RAG) to create a comprehensive digital memory assistant.
+Verath is an AI-powered personal memory system that transforms raw audio and text into structured, searchable memories that you can query naturally—like asking your own brain for information. It combines advanced speech recognition, intelligent NLP extraction, vector embeddings, and retrieval-augmented generation (RAG) to create a comprehensive digital memory assistant.
 
 ### Core Capabilities
 
@@ -74,7 +74,7 @@ SecondBrain is an AI-powered personal memory system that transforms raw audio an
 
 ### System Architecture
 
-SecondBrain follows a microservices-inspired architecture with three main components:
+Verath follows a microservices-inspired architecture with three main components:
 
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐

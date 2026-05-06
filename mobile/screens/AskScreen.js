@@ -10,261 +10,210 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Dimensions,
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { askQuestion, uploadAudio } from '../services/api';
-import { Audio } from 'expo-av';
+import { Feather } from '@expo/vector-icons';
+import { askQuestion } from '../services/api';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { colors, fonts, spacing, radius, intentColors } from '../theme';
+
+const { width } = Dimensions.get('window');
+
+const SUGGESTIONS = [
+  "What meetings do I have?",
+  "What are my upcoming deadlines?",
+  "What tasks did I mention?",
+  "What did I commit to this week?"
+];
+
+const Message = ({ text, isUser, sources, confidence }) => {
+  return (
+    <View style={[styles.messageRow, isUser && styles.messageRowUser]}>
+      {!isUser && (
+        <View style={styles.avatarV}>
+          <Text style={styles.avatarText}>V</Text>
+        </View>
+      )}
+      <View style={[styles.messageBubble, isUser ? styles.bubbleUser : styles.bubbleAI]}>
+        <Text style={[styles.messageText, isUser && styles.messageTextUser]}>{text}</Text>
+        {!isUser && sources && sources.length > 0 && (
+          <View style={styles.sourcesRow}>
+            {sources.slice(0, 3).map((s, i) => (
+              <View key={i} style={styles.sourceChip}>
+                <View style={[styles.sourceDot, { backgroundColor: intentColors[s.intent]?.text || colors.accentPrimary }]} />
+                <Text style={styles.sourceText}>{Math.round((s.confidence || 0) * 100)}%</Text>
+              </View>
+            ))}
+          </View>
+        )}
+        {confidence !== undefined && !isUser && (
+          <Text style={styles.confidenceText}>Confidence: {Math.round(confidence * 100)}%</Text>
+        )}
+      </View>
+      {isUser && (
+        <View style={styles.avatarUser}>
+          <Feather name="user" size={16} color={colors.textPrimary} />
+        </View>
+      )}
+    </View>
+  );
+};
 
 export default function AskScreen({ navigation }) {
   const [query, setQuery] = useState('');
-  const [answer, setAnswer] = useState('');
+  const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [recording, setRecording] = useState(false);
-  const [sources, setSources] = useState([]);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [onboardingStep, setOnboardingStep] = useState(0);
   const scrollViewRef = useRef(null);
+  const inputRef = useRef(null);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    const token = await AsyncStorage.getItem('sb_token');
-    if (token) {
-      setIsAuthenticated(true);
-    } else {
-      setShowOnboarding(true);
-    }
-  };
-
-  const handleOnboardingNext = async () => {
-    if (onboardingStep === 0) {
-      setOnboardingStep(1);
-    } else if (onboardingStep === 1) {
-      setOnboardingStep(2);
-    } else {
-      setShowOnboarding(false);
-    }
+  const scrollToBottom = () => {
+    setTimeout(() => {
+      scrollViewRef.current?.scrollToEnd({ animated: true });
+    }, 100);
   };
 
   const handleSubmit = async () => {
-    if (!query.trim()) return;
+    if (!query.trim() || loading) return;
 
+    const userQuery = query.trim();
+    setQuery('');
+    
+    setMessages(prev => [...prev, { id: Date.now(), text: userQuery, isUser: true }]);
     setLoading(true);
-    setAnswer('');
-    setSources([]);
+    scrollToBottom();
 
     try {
-      const response = await askQuestion(query);
-      setAnswer(response.answer);
-      setSources(response.sources || []);
-      setQuery('');
+      const response = await askQuestion(userQuery);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        text: response.answer || "I couldn't find an answer to that question.",
+        isUser: false,
+        sources: response.sources || [],
+        confidence: response.confidence_score || 0
+      }]);
     } catch (error) {
-      Alert.alert('Error', 'Failed to get answer. Please try again.');
-      setAnswer('Sorry, I could not connect to your SecondBrain. Please check your connection.');
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        text: "Sorry, I couldn't connect to Verath. Please check your connection and try again.",
+        isUser: false
+      }]);
     } finally {
       setLoading(false);
+      scrollToBottom();
     }
   };
 
-  const handleVoiceInput = async () => {
-    if (recording) return;
-
-    try {
-      // Request permissions
-      const permission = await Audio.requestPermissionsAsync();
-      if (permission.status !== 'granted') {
-          Alert.alert('Permission denied', 'Microphone access is required for voice input.');
-          return;
-      }
-
-      await Audio.setAudioModeAsync({
-          allowsRecordingIOS: true,
-          playsInSilentModeIOS: true,
-      });
-
-      setRecording(true);
-      setAnswer('Listening...');
-      setSources([]);
-
-      // Start local recording
-      const localRecording = new Audio.Recording();
-      await localRecording.prepareToRecordAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY);
-      await localRecording.startAsync();
-
-      // Record for 5 seconds (or add a "Stop" button later, but for now 5s is fine)
-      await new Promise(resolve => setTimeout(resolve, 5000));
-
-      await localRecording.stopAndUnloadAsync();
-      const uri = localRecording.getURI();
-
-      setAnswer('Neural processing - Syncing to brain...');
-      
-      const response = await uploadAudio(uri);
-      if (response.success) {
-        setAnswer('Voice captured. Analyzing memory contexts...');
-        setTimeout(async () => {
-          try {
-            const queryResponse = await askQuestion('Summarize what I just said');
-            setAnswer(queryResponse.answer);
-            setSources(queryResponse.sources || []);
-          } catch (error) {
-            setAnswer('Memory successfully captured and indexed.');
-          }
-        }, 1500);
-      } else {
-        Alert.alert('Error', response.error || 'Failed to process audio');
-        setAnswer('');
-      }
-    } catch (error) {
-      console.error('Mobile voice input error:', error);
-      Alert.alert('Error', 'Failed to capture voice input');
-      setAnswer('');
-    } finally {
-      setRecording(false);
-    }
+  const handleSuggestion = (suggestion) => {
+    setQuery(suggestion);
+    inputRef.current?.focus();
   };
 
-  const OnboardingOverlay = () => (
-    <View style={styles.overlay}>
-      <View style={styles.onboardingCard}>
-        {onboardingStep === 0 && (
-          <>
-            <MaterialCommunityIcons name="brain" size={60} color="#6366f1" />
-            <Text style={styles.onboardingTitle}>Welcome to SecondBrain</Text>
-            <Text style={styles.onboardingText}>
-              What do you want to remember? Lectures, meetings, conversations, or daily life?
-            </Text>
-            <TouchableOpacity style={styles.onboardingButton} onPress={handleOnboardingNext}>
-              <Text style={styles.onboardingButtonText}>Continue</Text>
-            </TouchableOpacity>
-          </>
-        )}
+  const clearChat = () => {
+    Alert.alert(
+      'Clear conversation?',
+      'This will remove all messages.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Clear', style: 'destructive', onPress: () => setMessages([]) }
+      ]
+    );
+  };
 
-        {onboardingStep === 1 && (
-          <>
-            <MaterialCommunityIcons name="microphone" size={60} color="#6366f1" />
-            <Text style={styles.onboardingTitle}>Microphone Access</Text>
-            <Text style={styles.onboardingText}>
-              SecondBrain needs microphone access to record and transcribe your conversations.
-            </Text>
-            <TouchableOpacity style={styles.onboardingButton} onPress={handleOnboardingNext}>
-              <Text style={styles.onboardingButtonText}>Allow Access</Text>
-            </TouchableOpacity>
-          </>
-        )}
-
-        {onboardingStep === 2 && (
-          <>
-            <MaterialCommunityIcons name="lightbulb-on-outline" size={60} color="#6366f1" />
-            <Text style={styles.onboardingTitle}>Try It Out</Text>
-            <Text style={styles.onboardingText}>
-              Ask anything like "What did I do today?" or record a voice note.
-            </Text>
-            <TouchableOpacity style={styles.onboardingButton} onPress={handleOnboardingNext}>
-              <Text style={styles.onboardingButtonText}>Get Started</Text>
-            </TouchableOpacity>
-          </>
-        )}
-      </View>
-    </View>
-  );
-
-  if (showOnboarding) {
-    return <OnboardingOverlay />;
-  }
+  const showEmptyState = messages.length === 0 && !loading;
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>SecondBrain</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Settings')}>
-          <MaterialCommunityIcons name="cog" size={24} color="#fff" />
-        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Ask Verath</Text>
+        {messages.length > 0 && (
+          <TouchableOpacity onPress={clearChat}>
+            <Feather name="trash-2" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+        )}
       </View>
 
       <ScrollView
         ref={scrollViewRef}
-        style={styles.content}
-        contentContainerStyle={styles.contentContainer}
-        onContentSizeChange={() => scrollViewRef.current?.scrollToEnd({ animated: true })}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+        showsVerticalScrollIndicator={false}
       >
-        {answer ? (
-          <View style={styles.answerContainer}>
-            <View style={styles.answerHeader}>
-              <MaterialCommunityIcons name="robot" size={20} color="#6366f1" />
-              <Text style={styles.answerLabel}>SecondBrain</Text>
+        {showEmptyState ? (
+          <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Feather name="message-circle" size={40} color={colors.accentPrimary} />
             </View>
-            <Text style={styles.answerText}>{answer}</Text>
+            <Text style={styles.emptyTitle}>Ask anything about your memories</Text>
+            <Text style={styles.emptySubtitle}>
+              Try asking about meetings, deadlines, tasks, or people you mentioned
+            </Text>
             
-            {sources.length > 0 && (
-              <View style={styles.sourcesContainer}>
-                <Text style={styles.sourcesTitle}>Sources</Text>
-                {sources.map((source, index) => (
-                  <View key={index} style={styles.sourceItem}>
-                    <MaterialCommunityIcons name="account-circle" size={14} color="#888" />
-                    <Text style={styles.sourceText}>
-                      {source.speaker} • {source.timestamp} • {(source.importance * 100).toFixed(0)}%
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            <View style={styles.suggestionsContainer}>
+              {SUGGESTIONS.map((suggestion, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.suggestionChip}
+                  onPress={() => handleSuggestion(suggestion)}
+                >
+                  <Text style={styles.suggestionText}>{suggestion}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
         ) : (
-          <View style={styles.placeholderContainer}>
-            <MaterialCommunityIcons name="forum-outline" size={60} color="#374151" />
-            <Text style={styles.placeholderText}>
-              Ask anything about your memories, or record a voice note
-            </Text>
-          </View>
-        )}
-
-        {loading && (
-          <View style={styles.loadingContainer}>
-            <ActivityIndicator size="large" color="#6366f1" />
-            <Text style={styles.loadingText}>Thinking...</Text>
-          </View>
-        )}
-
-        {recording && (
-          <View style={styles.recordingContainer}>
-            <View style={styles.recordingIndicator} />
-            <Text style={styles.recordingText}>Recording...</Text>
-          </View>
+          <>
+            {messages.map((message) => (
+              <Message
+                key={message.id}
+                text={message.text}
+                isUser={message.isUser}
+                sources={message.sources}
+                confidence={message.confidence}
+              />
+            ))}
+            
+            {loading && (
+              <View style={styles.loadingRow}>
+                <View style={styles.avatarV}>
+                  <Text style={styles.avatarText}>V</Text>
+                </View>
+                <View style={styles.loadingBubble}>
+                  <ActivityIndicator size="small" color={colors.accentPrimary} />
+                  <Text style={styles.loadingText}>Thinking...</Text>
+                </View>
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
       <View style={styles.inputContainer}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask anything..."
-          value={query}
-          onChangeText={setQuery}
-          onSubmitEditing={handleSubmit}
-          multiline
-          maxLength={500}
-        />
-        <TouchableOpacity
-          style={[styles.iconButton, recording && styles.iconButtonDisabled]}
-          onPress={handleVoiceInput}
-          disabled={recording || loading}
-        >
-          <MaterialCommunityIcons name="microphone" size={24} color="#6366f1" />
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.sendButton, !query.trim() && styles.sendButtonDisabled]}
-          onPress={handleSubmit}
-          disabled={!query.trim() || loading}
-        >
-          <MaterialCommunityIcons name="send" size={24} color="#fff" />
-        </TouchableOpacity>
+        <View style={styles.inputWrapper}>
+          <TextInput
+            ref={inputRef}
+            style={styles.input}
+            placeholder="Ask Verath anything..."
+            placeholderTextColor={colors.textTertiary}
+            value={query}
+            onChangeText={setQuery}
+            multiline
+            maxLength={500}
+            returnKeyType="send"
+            onSubmitEditing={handleSubmit}
+            blurOnSubmit={false}
+          />
+          <TouchableOpacity
+            style={[styles.sendButton, (!query.trim() || loading) && styles.sendButtonDisabled]}
+            onPress={handleSubmit}
+            disabled={!query.trim() || loading}
+          >
+            <Feather name="arrow-up" size={20} color={colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </KeyboardAvoidingView>
   );
@@ -273,196 +222,225 @@ export default function AskScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#111827',
-  },
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  onboardingCard: {
-    backgroundColor: '#1f2937',
-    borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    width: '100%',
-    maxWidth: 400,
-  },
-  onboardingTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: 20,
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  onboardingText: {
-    fontSize: 16,
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginBottom: 30,
-    lineHeight: 24,
-  },
-  onboardingButton: {
-    backgroundColor: '#6366f1',
-    paddingVertical: 15,
-    paddingHorizontal: 40,
-    borderRadius: 10,
-    width: '100%',
-  },
-  onboardingButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center',
+    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 20,
-    backgroundColor: '#1f2937',
+    paddingHorizontal: 24,
+    paddingTop: 60,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontFamily: fonts.display,
+    fontSize: 20,
+    color: colors.textPrimary,
+    fontWeight: '700',
   },
-  content: {
+  messagesContainer: {
     flex: 1,
   },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 100,
+  messagesContent: {
+    padding: 24,
+    paddingBottom: 40,
   },
-  answerContainer: {
-    backgroundColor: '#1f2937',
-    borderRadius: 15,
-    padding: 20,
-    marginBottom: 10,
-  },
-  answerHeader: {
-    flexDirection: 'row',
+  emptyState: {
     alignItems: 'center',
-    marginBottom: 10,
+    paddingTop: 64,
+    paddingHorizontal: 24,
   },
-  answerLabel: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#6366f1',
-    marginLeft: 10,
+  emptyIcon: {
+    width: 80,
+    height: 80,
+    borderRadius: 32,
+    backgroundColor: colors.accentPrimary + '15',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
-  answerText: {
-    fontSize: 16,
-    color: '#fff',
-    lineHeight: 24,
+  emptyTitle: {
+    fontFamily: fonts.displayMedium,
+    fontSize: 18,
+    color: colors.textPrimary,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  sourcesContainer: {
-    marginTop: 15,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
-  },
-  sourcesTitle: {
+  emptySubtitle: {
+    fontFamily: fonts.body,
     fontSize: 14,
-    fontWeight: 'bold',
-    color: '#9ca3af',
-    marginBottom: 10,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 40,
   },
-  sourceItem: {
+  suggestionsContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 5,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
   },
-  sourceText: {
-    fontSize: 12,
-    color: '#9ca3af',
+  suggestionChip: {
+    backgroundColor: colors.card,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  suggestionText: {
+    fontFamily: fonts.bodyMedium,
+    fontSize: 13,
+    color: colors.textSecondary,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    marginBottom: 16,
+    alignItems: 'flex-end',
+  },
+  messageRowUser: {
+    justifyContent: 'flex-end',
+  },
+  avatarV: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accentPrimary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  avatarText: {
+    fontFamily: fonts.display,
+    fontSize: 14,
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+  avatarUser: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.accentSecondary,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginLeft: 8,
   },
-  placeholderContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
+  messageBubble: {
+    maxWidth: width * 0.75,
+    padding: 16,
+    borderRadius: 20,
   },
-  placeholderText: {
-    fontSize: 16,
-    color: '#6b7280',
-    textAlign: 'center',
-    marginTop: 20,
+  bubbleUser: {
+    backgroundColor: colors.accentSecondary,
+    borderBottomRightRadius: 6,
   },
-  loadingContainer: {
+  bubbleAI: {
+    backgroundColor: colors.card,
+    borderBottomLeftRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  messageText: {
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.textPrimary,
+    lineHeight: 22,
+  },
+  messageTextUser: {
+    color: colors.background,
+  },
+  sourcesRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 4,
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  sourceChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 30,
+    gap: 4,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  sourceDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  sourceText: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textSecondary,
+  },
+  confidenceText: {
+    fontFamily: fonts.mono,
+    fontSize: 11,
+    color: colors.textTertiary,
+    marginTop: 4,
+  },
+  loadingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  loadingBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.card,
+    padding: 16,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderBottomLeftRadius: 6,
   },
   loadingText: {
-    fontSize: 16,
-    color: '#9ca3af',
-    marginTop: 10,
-  },
-  recordingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 20,
-    backgroundColor: '#1f2937',
-    borderRadius: 10,
-    marginBottom: 10,
-  },
-  recordingIndicator: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: '#ef4444',
-    marginRight: 10,
-  },
-  recordingText: {
-    fontSize: 16,
-    color: '#fff',
+    fontFamily: fonts.body,
+    fontSize: 13,
+    color: colors.textSecondary,
   },
   inputContainer: {
+    padding: 16,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  inputWrapper: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    padding: 20,
-    backgroundColor: '#1f2937',
-    borderTopWidth: 1,
-    borderTopColor: '#374151',
+    backgroundColor: colors.card,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   input: {
     flex: 1,
-    backgroundColor: '#374151',
-    borderRadius: 25,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    color: '#fff',
-    fontSize: 16,
+    fontFamily: fonts.body,
+    fontSize: 15,
+    color: colors.textPrimary,
     maxHeight: 100,
-    marginRight: 10,
-  },
-  iconButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#374151',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  iconButtonDisabled: {
-    opacity: 0.5,
+    paddingTop: 8,
+    paddingBottom: 8,
   },
   sendButton: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: '#6366f1',
-    justifyContent: 'center',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.accentPrimary,
     alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
   },
   sendButtonDisabled: {
-    backgroundColor: '#374151',
-    opacity: 0.5,
+    backgroundColor: colors.textMuted,
   },
 });
