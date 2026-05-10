@@ -1,4 +1,7 @@
-const API_BASE = "http://127.0.0.1:8000";
+// Dynamically determine API base URL to allow access from other devices on the same network
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || !window.location.hostname
+    ? "http://127.0.0.1:8000"
+    : `${window.location.protocol}//${window.location.hostname}:8000`;
 let AUTH_TOKEN = localStorage.getItem('verath_token');
 let currentSection = 'dashboard';
 let statsCache = null;
