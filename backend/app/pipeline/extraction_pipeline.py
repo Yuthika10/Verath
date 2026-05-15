@@ -113,15 +113,44 @@ class ExtractionPipeline:
         return text
     
     def _detect_correction(self, text: str) -> tuple[bool, str]:
-        """Detect speech corrections and handle them."""
-        if self.correction_regex.search(text):
-            # Split on correction pattern and keep only the last part
-            parts = self.correction_regex.split(text)
-            if len(parts) > 1:
-                # Keep the part after the last correction
-                corrected_text = parts[-1].strip()
-                logger.info(f"Correction detected: '{text[:50]}...' -> '{corrected_text[:50]}...'")
-                return True, corrected_text
+        """Detect speech corrections and handle them using segment analysis."""
+        # Split into segments
+        segments = re.split(r'(?<=[.!?])\s+|(?<=\.\.\.)\s*', text)
+        segments = [s.strip() for s in segments if s.strip()]
+        
+        if not segments:
+            return False, text
+
+        # Detection pattern for segment starts
+        correction_start_pattern = r'^(?:no\s+no|wait|actually|sorry|correction|i\s+mean|not\s+that)+(.*)$'
+        
+        corrected_segments = []
+        has_correction = False
+        
+        for i, segment in enumerate(segments):
+            match = re.match(correction_start_pattern, segment, re.IGNORECASE)
+            if match and i > 0:
+                content = match.group(1).strip()
+                if content:
+                    # Replace the last segment
+                    if corrected_segments:
+                        corrected_segments.pop()
+                    corrected_segments.append(content)
+                    has_correction = True
+                else:
+                    # Filler like "Wait." or "Actually." - just skip this segment
+                    has_correction = True
+            elif match and i == 0:
+                content = match.group(1).strip()
+                if content:
+                    corrected_segments.append(content)
+                    has_correction = True
+            else:
+                corrected_segments.append(segment)
+                
+        if has_correction:
+            return True, ' '.join(corrected_segments)
+            
         return False, text
     
     def _parse_temporal_entities(self, text: str) -> Dict[str, Any]:

@@ -45,35 +45,61 @@ class MemoryExtractor:
         Example: "let's meet tomorrow... no no day after tomorrow"
         Returns: (has_correction, corrected_text)
         """
-        # Handle "no no" or "no, no" patterns - take the text after the last "no"
-        no_pattern = r'(?:no\s*,?\s*)+(.+?)(?:\.|$|no\s*,?\s*)'
-        no_match = re.search(no_pattern, text, re.IGNORECASE)
-        if no_match:
-            corrected = no_match.group(1).strip()
-            return True, corrected
+        # 1. Split into sentences/segments for more granular analysis
+        # Using a slightly more robust split that keeps common abbreviations in mind
+        segments = re.split(r'(?<=[.!?])\s+|(?<=\.\.\.)\s*', text)
+        segments = [s.strip() for s in segments if s.strip()]
         
-        sentences = re.split(r'[.!?]+', text)
-        sentences = [s.strip() for s in sentences if s.strip()]
-        
-        if len(sentences) < 2:
+        if not segments:
             return False, text
+
+        # 2. Handle "no no" or "no wait" patterns at the start of a segment
+        # This is a common pattern for immediate speech correction
+        correction_start_pattern = r'^(?:no\s*,?\s*|wait\s*,?\s*|actually\s*,?\s*|sorry\s*,?\s*|correction\s*,?\s*|correction\s*:?\s*)+(.*)$'
         
-        # Check if any sentence contains correction patterns
-        correction_indices = []
-        for i, sentence in enumerate(sentences):
-            for pattern in self.correction_patterns:
-                if re.search(pattern, sentence, re.IGNORECASE):
-                    correction_indices.append(i)
-                    break
+        corrected_segments = []
+        has_correction = False
         
-        if not correction_indices:
-            return False, text
+        for i, segment in enumerate(segments):
+            match = re.match(correction_start_pattern, segment, re.IGNORECASE)
+            if match and i > 0:
+                # This segment looks like a correction of the PREVIOUS one
+                # If the previous segment was short or very similar, we discard it
+                content = match.group(1).strip()
+                if content:
+                    # Replace the last added segment with this one
+                    logger.info(f"Correction detected: Discarding '{segments[i-1]}' for '{content}'")
+                    if corrected_segments:
+                        corrected_segments.pop()
+                    corrected_segments.append(content)
+                    has_correction = True
+                else:
+                    # It's just a filler like "No, wait." - we just ignore it and keep going
+                    # but we'll flag it so the NEXT segment might be seen as the correction
+                    has_correction = True
+            elif match and i == 0:
+                # Correction pattern at the very beginning of the transcript
+                content = match.group(1).strip()
+                if content:
+                    corrected_segments.append(content)
+                    has_correction = True
+                # if empty content, just skip it (it's a filler at start)
+            else:
+                # Normal segment
+                corrected_segments.append(segment)
         
-        # Keep only the latest statement after the last correction
-        last_correction = max(correction_indices)
-        if last_correction + 1 < len(sentences):
-            corrected_text = ' '.join(sentences[last_correction + 1:])
-            return True, corrected_text
+        if has_correction:
+            return True, ' '.join(corrected_segments)
+            
+        # 3. Fallback to middle-of-sentence "no no" patterns if not handled above
+        # But be VERY conservative - only if "no no" or "wait no" is present
+        mid_correction_pattern = r'(.+?)(?:\s+(?:no\s+no|wait\s+no|actually\s+no|sorry\s+no)\s+)(.+)'
+        mid_match = re.search(mid_correction_pattern, text, re.IGNORECASE)
+        if mid_match:
+            # Only treat as correction if the second part is substantial
+            if len(mid_match.group(2)) > 5:
+                logger.info(f"Mid-sentence correction detected: '{text}'")
+                return True, mid_match.group(2).strip()
         
         return False, text
     

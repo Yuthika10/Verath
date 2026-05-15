@@ -38,7 +38,13 @@ def identify_speakers(audio_file: str) -> List[Dict]:
         speakers = []
         for turn, _, speaker in diarization.itertracks(yield_label=True):
             # Map generic speaker labels to more user-friendly names
-            speaker_name = "Speaker " + speaker[-1] if speaker.startswith("SPEAKER") else speaker
+            # Fix: use the full ID if it's SPEAKER_XX
+            if speaker.startswith("SPEAKER_"):
+                speaker_id = speaker.split('_')[-1]
+                speaker_name = f"Speaker {speaker_id}"
+            else:
+                speaker_name = speaker
+            
             speakers.append({"speaker": speaker_name, "start": turn.start, "end": turn.end})
         return speakers or [{"speaker": "You", "start": 0.0, "end": 10.0}]
     except Exception as e:

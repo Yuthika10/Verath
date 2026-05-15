@@ -22,7 +22,7 @@ async def process_audio(file_path: str, user_id: str, timestamp: Optional[str] =
             logger.info("Privacy mode enabled - skipping processing")
             return None
         
-        # Transcribe audio
+        # 1. Transcribe audio
         logger.info(f"Transcribing audio: {file_path}")
         text = transcribe(file_path)
         
@@ -33,7 +33,7 @@ async def process_audio(file_path: str, user_id: str, timestamp: Optional[str] =
         
         logger.info(f"Transcribed: {text[:100]}...")
         
-        # Intelligent memory extraction
+        # 2. Intelligent memory extraction
         extraction_result = await memory_extractor.extract_memory(text)
         cleaned_text = extraction_result['cleaned_text']
         intent = extraction_result['intent']
@@ -41,24 +41,34 @@ async def process_audio(file_path: str, user_id: str, timestamp: Optional[str] =
         summary = extraction_result['summary']
         has_correction = extraction_result['has_correction']
         importance_boost = extraction_result['importance_boost']
+
+        # 3. Get embedding for cleaned text early (needed for identification and storage)
+        embedding = get_embedding(cleaned_text)
+        if not embedding or all(v == 0 for v in embedding):
+            raise EmbeddingError("Failed to generate valid embedding")
         
-        # Identify speakers
+        # 4. Identify speakers
         speakers = identify_speakers(file_path)
-        primary_speaker = get_primary_speaker(speakers)
+        primary_label = get_primary_speaker(speakers)
         
-        # Score importance with boost
+        # Try to map label to a trained voice profile using text embedding
+        from app.services.speaker_training import identify_voice
+        identified_name = identify_voice(embedding)
+        
+        if identified_name != "unknown":
+            primary_speaker = identified_name
+            logger.info(f"Speaker identified as trained profile: {identified_name}")
+        else:
+            primary_speaker = primary_label
+        
+        # 5. Score importance with boost
         base_importance = await score_importance(cleaned_text)
         final_importance = min(base_importance + importance_boost, 1.0)
         importance_category = categorize_importance(final_importance)
         
         logger.info(f"Speaker: {primary_speaker}, Intent: {intent}, Importance: {final_importance:.2f} ({importance_category})")
         
-        # Get embedding for cleaned text
-        embedding = get_embedding(cleaned_text)
-        if not embedding or all(v == 0 for v in embedding):
-            raise EmbeddingError("Failed to generate valid embedding")
-        
-        # Create enhanced memory object
+        # 6. Create enhanced memory object
         memory = Memory(
             text=text,
             cleaned_text=cleaned_text,
