@@ -26,7 +26,12 @@ git clone https://github.com/yourusername/Verath.git
 cd Verath
 cp .env.example .env  # Edit MONGO_URI and SECRET_KEY
 docker-compose up -d
-open http://localhost:8080
+
+# Start Frontend (React + Vite)
+cd web
+npm install
+npm run dev
+# App will run on http://localhost:5173
 ```
 
 Verath is an AI-powered personal memory system that transforms raw audio and text into structured, searchable memories that you can query naturally—like asking your own brain for information. It combines advanced speech recognition, intelligent NLP extraction, vector embeddings, and retrieval-augmented generation (RAG) to create a comprehensive digital memory assistant.
@@ -1029,7 +1034,16 @@ The backend will be available at `http://localhost:8000`
 
 API documentation: `http://localhost:8000/docs`
 
-#### 8. Mobile App Setup (Optional)
+#### 8. Start the Web Frontend (React + Vite)
+
+```bash
+cd web
+npm install
+npm run dev
+```
+The React frontend will be available at `http://localhost:5173`.
+
+#### 9. Mobile App Setup (Optional)
 
 ```bash
 cd mobile
@@ -1051,19 +1065,7 @@ npx expo run:android
 npx expo start
 ```
 
-#### 9. Web Dashboard (Optional)
 
-```bash
-cd web
-
-# Configure API URL in web/app.js and web/auth.js
-# Update API_BASE to your backend URL
-
-# Serve the dashboard
-python -m http.server 8080
-```
-
-The dashboard will be available at `http://localhost:8080`
 
 ---
 

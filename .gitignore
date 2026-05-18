@@ -34,6 +34,15 @@ ENV/
 env/
 backend/.venv/
 
+# --- Node / Web (React + Vite) ---
+web/node_modules/
+web/dist/
+web/npm-debug.log*
+web/yarn-debug.log*
+web/yarn-error.log*
+web/.eslintcache
+web/.vite/
+
 # --- Node / Mobile (React Native + Expo) ---
 mobile/node_modules/
 mobile/.expo/
@@ -64,6 +73,8 @@ temp_*.wav
 *.wav
 *.mp3
 *.m4a
+*.log
+backend/data/
 data/vector_db/*
 !data/vector_db/.gitkeep
 data/*.pkl

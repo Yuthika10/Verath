@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verath | AI Powered Personal Memory</title>
+  <meta name="description" content="Verath — Your AI memory companion that records, summarizes and indexes your conversations.">
+  <meta property="og:title" content="Verath | AI Powered Personal Memory">
+  <meta property="og:description" content="Your AI memory companion that records, summarizes and indexes your conversations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Mobile Header -->
+    <header class="mobile-header">
+      <div class="sidebar-logo">
+        <div class="logo-mark">V</div>
+        <span class="logo-text">Verath</span>
+      </div>
+      <div class="mobile-actions">
+        <button class="btn-ghost btn-sm" onclick="logout()" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <nav class="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-mark">V</div>
+        <span class="logo-text">Verath</span>
+      </div>
+
+      <ul class="nav-list">
+        <li class="nav-item active" data-section="dashboard" onclick="navigateTo('dashboard')">
+          <i class="fa-solid fa-grid-2"></i>
+          <span>Dashboard</span>
+        </li>
+        <li class="nav-item" data-section="memories" onclick="navigateTo('memories')">
+          <i class="fa-solid fa-memory"></i>
+          <span>Memories</span>
+          <span class="nav-badge" id="nav-memory-count">—</span>
+        </li>
+        <li class="nav-item" data-section="timeline" onclick="navigateTo('timeline')">
+          <i class="fa-solid fa-timeline"></i>
+          <span>Timeline</span>
+        </li>
+        <li class="nav-item" data-section="reminders" onclick="navigateTo('reminders')">
+          <i class="fa-solid fa-bell"></i>
+          <span>Reminders</span>
+          <span class="nav-badge urgent" id="nav-reminder-count">—</span>
+        </li>
+        <li class="nav-item" data-section="insights" onclick="navigateTo('insights')">
+          <i class="fa-solid fa-sparkles"></i>
+          <span>Insights</span>
+        </li>
+        <li class="nav-item" data-section="ask" onclick="navigateTo('ask')">
+          <i class="fa-solid fa-comment-dots"></i>
+          <span>Ask Verath</span>
+        </li>
+      </ul>
+
+      <div class="sidebar-user">
+        <div class="user-avatar" id="sidebar-avatar">—</div>
+        <div class="user-info">
+          <span class="user-name" id="sidebar-username">—</span>
+          <span class="user-status">
+            <span class="status-dot"></span>
+            Active
+          </span>
+        </div>
+        <button class="btn-ghost btn-sm" onclick="logout()" title="Logout">
+          <i class="fa-solid fa-right-from-bracket"></i>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Dashboard Section -->
+      <section id="section-dashboard" class="section active">
+        <div class="page-header animate-fade-up">
+          <div>
+            <h1 class="page-title">Good <span id="greeting-time">morning</span>, <span id="greeting-name">—</span></h1>
+            <p class="page-subtitle">Here's what Verath remembers today</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-ghost" onclick="triggerRecord()">
+              <i class="fa-solid fa-microphone"></i> Record Memory
+            </button>
+            <span class="system-status" id="system-status">
+              <span class="status-dot"></span>
+              <span id="status-text">Connecting…</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Stat Cards -->
+        <div class="stat-grid stagger animate-fade-up" style="animation-delay:100ms">
+          <div class="stat-card">
+            <div class="stat-icon primary">
+              <i class="fa-solid fa-brain"></i>
+            </div>
+            <div class="stat-body">
+              <span class="stat-label">Total Memories</span>
+              <span class="stat-value" id="stat-total">
+                <span class="skeleton" style="width:48px;height:28px;display:inline-block"></span>
+              </span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon warm">
+              <i class="fa-solid fa-calendar-exclamation"></i>
+            </div>
+            <div class="stat-body">
+              <span class="stat-label">Upcoming Deadlines</span>
+              <span class="stat-value" id="stat-deadlines">—</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon secondary">
+              <i class="fa-solid fa-users"></i>
+            </div>
+            <div class="stat-body">
+              <span class="stat-label">People Mentioned</span>
+              <span class="stat-value" id="stat-people">—</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon gold">
+              <i class="fa-solid fa-fire"></i>
+            </div>
+            <div class="stat-body">
+              <span class="stat-label">Avg. Importance</span>
+              <span class="stat-value" id="stat-importance">—</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Two-column layout -->
+        <div class="dashboard-grid animate-fade-up" style="animation-delay:200ms">
+          <div class="card">
+            <div class="card-header">
+              <h3>Today's Timeline</h3>
+              <button class="btn btn-ghost btn-sm" onclick="navigateTo('timeline')">View all</button>
+            </div>
+            <div id="dashboard-timeline" class="timeline-list">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-timeline"></i></div>
+                <h3>Loading timeline...</h3>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>Upcoming Reminders</h3>
+              <span class="badge badge-intent-deadline" id="reminder-count-badge">—</span>
+            </div>
+            <div id="dashboard-reminders" class="reminder-list">
+              <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-bell"></i></div>
+                <h3>Loading reminders...</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Intent Breakdown -->
+        <div class="card animate-fade-up" style="animation-delay:300ms">
+          <div class="card-header">
+            <h3>Memory Breakdown</h3>
+          </div>
+          <div id="intent-breakdown" class="intent-bars">
+            <div class="skeleton" style="width:100%;height:24px"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Memories Section -->
+      <section id="section-memories" class="section">
+        <div class="page-header">
+          <div>
+            <h2>All Memories</h2>
+            <p class="page-subtitle">Your recorded thoughts, meetings, and commitments</p>
+          </div>
+          <div class="filter-bar">
+            <select class="input select-sm" id="intent-filter" onchange="loadMemories()">
+              <option value="">All types</option>
+              <option value="meeting">Meetings</option>
+              <option value="deadline">Deadlines</option>
+              <option value="task">Tasks</option>
+              <option value="reminder">Reminders</option>
+              <option value="commitment">Commitments</option>
+            </select>
+            <input type="range" id="importance-filter" min="0" max="100" value="0" oninput="updateImportanceLabel(this)" onchange="loadMemories()">
+            <span id="importance-label" class="filter-label">Min importance: 0%</span>
+          </div>
+        </div>
+
+        <div id="memories-grid" class="memories-grid">
+          <div class="skeleton" style="width:100%;height:200px"></div>
+          <div class="skeleton" style="width:100%;height:200px"></div>
+          <div class="skeleton" style="width:100%;height:200px"></div>
+        </div>
+      </section>
+
+      <!-- Timeline Section -->
+      <section id="section-timeline" class="section">
+        <div class="page-header">
+          <div>
+            <h2>Timeline</h2>
+            <p class="page-subtitle">Chronological view of your memories</p>
+          </div>
+        </div>
+        <div id="timeline-full" class="timeline-list">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-timeline"></i></div>
+            <h3>Loading timeline...</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Reminders Section -->
+      <section id="section-reminders" class="section">
+        <div class="page-header">
+          <div>
+            <h2>Reminders</h2>
+            <p class="page-subtitle">Upcoming deadlines and scheduled alerts</p>
+          </div>
+        </div>
+        <div id="reminders-full" class="reminder-list">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-bell"></i></div>
+            <h3>Loading reminders...</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Insights Section -->
+      <section id="section-insights" class="section">
+        <div class="page-header">
+          <div>
+            <h2>Insights</h2>
+            <p class="page-subtitle">AI-generated patterns and observations</p>
+          </div>
+          <button class="btn btn-primary" onclick="loadInsights()">
+            <i class="fa-solid fa-rotate"></i> Refresh
+          </button>
+        </div>
+        <div id="insights-content" class="card">
+          <div class="empty-state">
+            <div class="empty-icon"><i class="fa-solid fa-sparkles"></i></div>
+            <h3>Loading insights...</h3>
+          </div>
+        </div>
+      </section>
+
+      <!-- Ask Verath Section -->
+      <section id="section-ask" class="section">
+        <div class="ask-container">
+          <div class="ask-header">
+            <h2>Ask Verath</h2>
+            <p>Query your memories in natural language. Answers are grounded in what you've actually recorded.</p>
+          </div>
+
+          <div id="ask-messages" class="ask-messages">
+            <div class="empty-state" id="ask-empty">
+              <div class="empty-icon"><i class="fa-solid fa-comment-dots"></i></div>
+              <h3>Ask anything about your memories</h3>
+              <p>Try "What did I commit to this week?" or "Who did I say I'd call?"</p>
+            </div>
+          </div>
+
+          <div class="suggestion-chips" id="suggestion-chips">
+            <span class="suggestion-chip" onclick="setQuery('What meetings do I have?')">What meetings do I have?</span>
+            <span class="suggestion-chip" onclick="setQuery('What are my upcoming deadlines?')">What are my upcoming deadlines?</span>
+            <span class="suggestion-chip" onclick="setQuery('What tasks did I mention?')">What tasks did I mention?</span>
+          </div>
+
+          <div class="ask-input-bar">
+            <input type="text" id="ask-input" class="input" placeholder="Ask Verath anything…" onkeydown="if(event.key==='Enter')submitQuery()">
+            <button class="btn btn-primary" onclick="submitQuery()" id="ask-btn">
+              <i class="fa-solid fa-arrow-up"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // Auth check
+    if (!localStorage.getItem('verath_token')) {
+      window.location.href = 'auth.html';
+    }
+
+    function logout() {
+      localStorage.removeItem('verath_token');
+      localStorage.removeItem('verath_username');
+      window.location.href = 'auth.html';
+    }
+
+    // Set greeting time
+    const hour = new Date().getHours();
+    const greetingTime = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+    document.getElementById('greeting-time').textContent = greetingTime;
+
+    // Set username from storage
+    const username = localStorage.getItem('verath_username') || 'User';
+    document.getElementById('greeting-name').textContent = username;
+    document.getElementById('sidebar-username').textContent = username;
+    document.getElementById('sidebar-avatar').textContent = username.charAt(0).toUpperCase();
+  </script>
+  <script src="app.js"></script>
+</body>
+</html>
