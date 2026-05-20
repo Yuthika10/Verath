@@ -897,8 +897,10 @@ const BASE_URL = "http://YOUR_COMPUTER_IP:8000";  // Use IP for physical devices
 **Access**:
 ```bash
 cd web
-python -m http.server 8080
+npm install
+npm run dev
 ```
+The React frontend will be available at `http://localhost:5173`.
 
 Navigate to `http://localhost:8080`
 
